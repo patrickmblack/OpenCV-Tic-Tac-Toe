@@ -6,16 +6,23 @@ import argparse
 import random
 import serial
 
-
+# Open Communication with the Arduino
 ser=serial.Serial("/dev/ttyACM0",9600)
+
+# Starts a video capture of the Webcam
 vc = cv2.VideoCapture(0)
 cv2.namedWindow("Let's Play!")
+
+# Starting blank field
 A=[[0,0,0],
     [0,0,0],
     [0,0,0]]
+
+
 i=0
 val=0
 delayTime = .1
+
 
 if vc.isOpened(): # try to get the first frame
     rval, frame = vc.read()
@@ -29,16 +36,20 @@ while rval == True:
     rval, frame = vc.read()
     key = cv2.waitKey(20)
    
-    
+    # If Esc key is pressed, exit the program 
     if key == 27: # exit on ESC
         break
+
+    # If Space is pressed, take a screen shot
     if key == 32:
         i=0
         # SPACE pressed
         img_name = "opencv_frame_0.png"
         cv2.imwrite(img_name, frame)
         print("{} written!".format(img_name))
-        
+
+        # Find circles within the screenshot taken
+                
         sleep(delayTime)
         img = cv.imread('opencv_frame_0.png',0)
         img = cv.medianBlur(img,5)
@@ -54,7 +65,8 @@ while rval == True:
             for (x,y,r) in circles:
                 cv2.circle(output, (x, y), r, (0, 255, 0), 4)
                 cv2.rectangle(output,(x-5, y-5),(x+5, y+5),(0, 128, 255),-1)
-                
+
+            # Find the center of every circle found, and change the appropriate square in A to 1
             
             for k in circles:
                 if circles[i][0]>0 and circles[i][0]<210 and circles[i][1]>0 and circles[i][1]<160:
@@ -107,6 +119,7 @@ while rval == True:
                     sleep(delayTime)
                     i=i+1
              
+            # Check if the Player has three circles in a row, or if there no winner and all tiles are filled, game is a tie
             
             if A[0][0]==A[0][1]==A[0][2]==1:
                 print("Person Victory")
@@ -147,7 +160,7 @@ while rval == True:
                             found.append((posn // width, posn % width))
                         posn += 1
 
-            
+            # Program choosean empty slot randomly to play in. Sends that number to the Arduino
             move = random.choice(found)
             A[move[0]][move[1]]=2
             Random_move=[move[0],move[1]]
@@ -197,14 +210,8 @@ while rval == True:
                 ser.write(str.encode(Robot_Play))
                 print("Robot plays in square ",Robot_Play)
                 ser.flushInput()
-            
-            
-                
-                
-                
-            #cv2.line(img=frame, pt1=((move[0]*210)+105,((move[1]*160)+80)), pt2=((move[0]*210)+115,((move[1]*160)+90)), color=(125, 125, 0), thickness=10, lineType=8, shift=0)
-            #cv2.circle(frame, ((move[0]*210)+105, (move[1]*160)+80), 5, (100, 100, 0), -1)
-            #cv2.imwrite(img_name, frame)
+
+
             '''make robot place at A[move[0]][move[1]]'''
             print("After:",A)
             print("---------------------------")
@@ -236,22 +243,11 @@ while rval == True:
             elif 0 not in A[0] and 0 not in A[1] and 0 not in A[2]:
                 print('Cats Game')
                 break
-                      
-                    
-                      
 
         else:
             print("TRY AGAIN")
         
                 
-            
-            
-            
-        
-
-        #cv.imshow('detected circles',np.hstack([output]))
-        
-                   
     else:
         cv2.line(img=frame, pt1=(0, 160), pt2=(800, 160), color=(255, 0, 0), thickness=5, lineType=8, shift=0)
         cv2.line(img=frame, pt1=(0, 320), pt2=(800, 320), color=(255, 0, 0), thickness=5, lineType=8, shift=0)
